@@ -12,7 +12,9 @@ const ridesRoutes = require('./routes/rides');
 const heartrateRoutes = require ('./routes/heartrate');
 const caloriesRoutes = require('./routes/calories');
 const coolerRoutes = require('./routes/coolertemp');
+const realtimeRoutes = require('./routes/realtime');
 
+app.use('/api/realtime', realtimeRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/gps', gpsRoutes);
 app.use('/api/rides', ridesRoutes);
