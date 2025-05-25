@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getRealtimeStats } = require('../controllers/realtimeStatsController');
-const authenticate = require('../middleware/authenticate');
+const authenticate = require('../middleware/authMiddleware');
 
 router.get('/', authenticate, getRealtimeStats);
 
