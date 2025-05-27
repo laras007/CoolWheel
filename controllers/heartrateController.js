@@ -64,3 +64,39 @@ exports.saveHeartrate = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getLastHeartrate = async (req, res) => {
+  const user_id = req.user.user_id;
+
+  try {
+    // Cari ride yang sedang aktif
+    const rideResult = await pool.query(
+      `SELECT id FROM rides WHERE user_id = $1 AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1`,
+      [user_id]
+    );
+
+    if (rideResult.rows.length === 0) {
+      return res.status(400).json({ error: 'Tidak ada ride yang aktif' });
+    }
+
+    const ride_id = rideResult.rows[0].id;
+
+    // Ambil detak jantung terakhir dari realtime_stats
+    const result = await pool.query(
+      `SELECT last_heartrate, updated_at FROM realtime_stats WHERE ride_id = $1`,
+      [ride_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Data heartrate belum tersedia' });
+    }
+
+    res.status(200).json({
+      bpm: result.rows[0].last_heartrate,
+      updated_at: result.rows[0].updated_at,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
