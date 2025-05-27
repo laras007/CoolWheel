@@ -1,5 +1,7 @@
 const axios = require('axios'); // pastikan axios sudah diinstall
 require('dotenv').config();
+const pool = require('../config/db'); // atau sesuaikan path ke file konfigurasi db kamu
+
 
 const VONAGE_API_KEY = process.env.VONAGE_API_KEY;
 const VONAGE_API_SECRET = process.env.VONAGE_API_SECRET;
