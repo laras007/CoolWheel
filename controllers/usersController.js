@@ -38,15 +38,20 @@ exports.login = async (req, res) => {
   try {
     const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = userResult.rows[0];
+
     if (!user) return res.status(401).json({ error: 'Email tidak ditemukan' });
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(401).json({ error: 'Password salah' });
 
-    const token = jwt.sign({ user_id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    // Gunakan token yang sudah ada jika tersedia
+    let token = user.token;
 
-    // Simpan token baru
-    await pool.query('UPDATE users SET token = $1 WHERE id = $2', [token, user.id]);
+    if (!token) {
+      // Buat token baru jika belum ada
+      token = jwt.sign({ user_id: user.id }, process.env.JWT_SECRET); // tanpa expiresIn agar tidak kadaluarsa
+      await pool.query('UPDATE users SET token = $1 WHERE id = $2', [token, user.id]);
+    }
 
     // Cek apakah profil lengkap
     const isProfileComplete =

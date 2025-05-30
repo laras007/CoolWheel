@@ -1,10 +1,9 @@
-const axios = require('axios'); // pastikan axios sudah diinstall
-require('dotenv').config();
-const pool = require('../db'); // atau sesuaikan path ke file konfigurasi db kamu
-
-const VONAGE_API_KEY = process.env.VONAGE_API_KEY;
-const VONAGE_API_SECRET = process.env.VONAGE_API_SECRET;
-const VONAGE_FROM = process.env.VONAGE_FROM || 'VonageApp';
+const pool = require('../db');
+const twilio = require('twilio');
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 
 exports.saveHeartrate = async (req, res) => {
   const user_id = req.user.user_id;
@@ -15,6 +14,7 @@ exports.saveHeartrate = async (req, res) => {
   }
 
   try {
+    // Ambil ride aktif
     const rideResult = await pool.query(
       `SELECT id FROM rides WHERE user_id = $1 AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1`,
       [user_id]
@@ -24,12 +24,14 @@ exports.saveHeartrate = async (req, res) => {
     }
     const ride_id = rideResult.rows[0].id;
 
+    // Simpan ke heartrates
     const result = await pool.query(
       `INSERT INTO heartrates (ride_id, bpm, recorded_at)
        VALUES ($1, $2, NOW()) RETURNING *`,
       [ride_id, bpm]
     );
 
+    // Update last_heartrate
     await pool.query(
       `UPDATE realtime_stats
        SET last_heartrate = $1, updated_at = NOW()
@@ -37,6 +39,7 @@ exports.saveHeartrate = async (req, res) => {
       [bpm, ride_id]
     );
 
+    // Ambil data user: username, sos_number, dan age
     const userResult = await pool.query(
       `SELECT username, sos_number, age FROM users WHERE id = $1`,
       [user_id]
@@ -45,18 +48,14 @@ exports.saveHeartrate = async (req, res) => {
 
     const maxBPM = 220 - age;
 
-    // Kirim SMS jika bpm melebihi batas maksimal
+    // Kirim WA jika bpm melebihi batas maksimal berdasarkan usia
     if (bpm > maxBPM && sos_number) {
-      const message = `⚠️ Detak jantung ${username} tinggi (${bpm} bpm)!`;
+      const message = `⚠️ Detak jantung pada ${username} tinggi (${bpm} bpm).;`;
 
-      await axios.post('https://rest.nexmo.com/sms/json', null, {
-        params: {
-          api_key: VONAGE_API_KEY,
-          api_secret: VONAGE_API_SECRET,
-          to: sos_number, // pastikan formatnya 628xxx
-          from: VONAGE_FROM,
-          text: message,
-        },
+      await client.messages.create({
+        from: 'whatsapp:+14155238886', // dari Twilio Sandbox
+        to: `whatsapp:${sos_number}`,
+        body: message,
       });
     }
 
