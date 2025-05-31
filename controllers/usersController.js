@@ -77,14 +77,8 @@ exports.login = async (req, res) => {
 
 
 exports.logout = async (req, res) => {
-  const user_id = req.user.user_id;
-
-  try {
-    await pool.query('UPDATE users SET token = NULL WHERE id = $1', [user_id]);
-    res.json({ message: 'Logout berhasil' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  // Tidak menghapus token dari database, hanya menginformasikan logout berhasil
+  res.json({ message: 'Logout berhasil' });
 };
 
 exports.getUser = async (req, res) => {
