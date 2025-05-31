@@ -84,3 +84,28 @@ exports.getHistoryByDate = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Ambil semua tanggal unik history ride
+exports.getAvailableDateHistory = async (req, res) => {
+  const user_id = req.user.user_id;
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT DISTINCT DATE(started_at) AS ride_date
+      FROM rides
+      WHERE user_id = $1 AND ended_at IS NOT NULL
+      ORDER BY ride_date DESC
+    `,
+      [user_id]
+    );
+
+    const available_dates = result.rows.map((row) =>
+      row.ride_date.toISOString().slice(0, 10)
+    );
+    res.json({ available_dates });
+  } catch (err) {
+    console.error("Gagal ambil available dates:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
