@@ -14,18 +14,39 @@ exports.getAllHistory = async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT DISTINCT DATE(started_at) AS ride_date
-      FROM rides
-      WHERE user_id = $1 AND ended_at IS NOT NULL
-      ORDER BY ride_date DESC
+      SELECT 
+        r.id AS ride_id,
+        r.started_at,
+        r.ended_at,
+        rs.heartrate AS highest_heartrate,
+        rs.calories AS total_calories,
+        rs.distance AS total_distance
+      FROM rides r
+      LEFT JOIN LATERAL (
+        SELECT 
+          MAX(last_heartrate) AS heartrate, 
+          SUM(calories) AS calories, 
+          SUM(distance) AS distance
+        FROM realtime_stats
+        WHERE ride_id = r.id
+      ) rs ON true
+      WHERE r.user_id = $1 AND r.ended_at IS NOT NULL
+      ORDER BY r.started_at DESC
     `,
       [user_id]
     );
 
-    const available_dates = result.rows.map((row) =>
-      row.ride_date.toISOString().slice(0, 10)
-    );
-    res.json({ available_dates });
+    const rides = result.rows.map((ride) => ({
+      ride_id: ride.ride_id,
+      started_at: ride.started_at,
+      ended_at: ride.ended_at,
+      highest_heartrate: parseInt(ride.highest_heartrate || 0),
+      total_calories: parseFloat(ride.total_calories || 0).toFixed(2),
+      total_distance: parseFloat(ride.total_distance || 0).toFixed(2),
+      duration_minutes: calculateDuration(ride.started_at, ride.ended_at),
+    }));
+
+    res.json({ history: rides });
   } catch (err) {
     console.error("Gagal ambil history:", err.message);
     res.status(500).json({ error: err.message });
@@ -92,7 +113,7 @@ exports.getAvailableDateHistory = async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT DISTINCT DATE(started_at) AS ride_date
+      SELECT DISTINCT TO_CHAR(DATE(started_at), 'YYYY-MM-DD') AS ride_date
       FROM rides
       WHERE user_id = $1 AND ended_at IS NOT NULL
       ORDER BY ride_date DESC
@@ -100,9 +121,7 @@ exports.getAvailableDateHistory = async (req, res) => {
       [user_id]
     );
 
-    const available_dates = result.rows.map((row) =>
-      row.ride_date.toISOString().slice(0, 10)
-    );
+    const available_dates = result.rows.map((row) => row.ride_date);
     res.json({ available_dates });
   } catch (err) {
     console.error("Gagal ambil available dates:", err.message);
