@@ -49,7 +49,10 @@ exports.login = async (req, res) => {
 
     if (!token) {
       // Buat token baru jika belum ada
-      token = jwt.sign({ user_id: user.id }, process.env.JWT_SECRET); // tanpa expiresIn agar tidak kadaluarsa
+      token = jwt.sign({ user_id: user.id }, process.env.JWT_SECRET, {
+        noTimestamp: false, // default, boleh ditulis atau tidak
+      });
+
       await pool.query('UPDATE users SET token = $1 WHERE id = $2', [token, user.id]);
     }
 
@@ -74,14 +77,8 @@ exports.login = async (req, res) => {
 
 
 exports.logout = async (req, res) => {
-  const user_id = req.user.user_id;
-
-  try {
-    await pool.query('UPDATE users SET token = NULL WHERE id = $1', [user_id]);
-    res.json({ message: 'Logout berhasil' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  // Tidak menghapus token dari database, hanya menginformasikan logout berhasil
+  res.json({ message: 'Logout berhasil' });
 };
 
 exports.getUser = async (req, res) => {
