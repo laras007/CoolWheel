@@ -94,7 +94,7 @@ exports.endRide = async (req, res) => {
     let MET = 4.0;
     if (pace >= 20) MET = 8.0;
     else if (pace >= 16) MET = 6.8;
-    if (avgHR >= 160) MET += 0.5;
+    if (maxHR >= 160) MET += 0.5;
 
     const calories = MET * weight * durationHr;
 
