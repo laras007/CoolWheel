@@ -33,7 +33,7 @@ exports.getRealtimeStats = async (req, res) => {
 
     // 2. Ambil GPS points
     const gpsResult = await pool.query(
-      `SELECT latitude, longitude, timestamp FROM gps_points WHERE ride_id = $1 ORDER BY timestamp ASC`,
+      `SELECT latitude, longitude, recorded_at FROM gps_points WHERE ride_id = $1 ORDER BY timestamp ASC`,
       [ride_id]
     );
     const gpsPoints = gpsResult.rows;
@@ -98,11 +98,11 @@ exports.getRealtimeStats = async (req, res) => {
     const calories = MET * weight * durationHours;
 
     res.status(200).json({
-      distance: totalDistance,           // meter
-      pace: parseFloat(pace.toFixed(2)), // km/jam
-      calories: Math.round(calories),    // kcal
-      last_heartrate: lastHeartrate
-    });
+    distance: parseFloat((totalDistance / 1000).toFixed(2)), // km
+    pace: parseFloat(pace.toFixed(2)),                      // km/jam
+    calories: Math.round(calories),                         // kcal
+    last_heartrate: lastHeartrate
+  });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
