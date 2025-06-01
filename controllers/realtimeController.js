@@ -76,7 +76,7 @@ exports.getRealtimeStats = async (req, res) => {
 
     // 4. Ambil last heartrate
     const hrResult = await pool.query(
-      `SELECT bpm FROM heartrate WHERE ride_id = $1 ORDER BY recorded_at DESC LIMIT 1`,
+      `SELECT bpm FROM heartrates WHERE ride_id = $1 ORDER BY recorded_at DESC LIMIT 1`,
       [ride_id]
     );
     const lastHeartrate = hrResult.rows[0]?.bpm || null;
