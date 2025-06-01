@@ -79,7 +79,7 @@ exports.getHistoryByDate = async (req, res) => {
       ) rs ON true
       WHERE r.user_id = $1 
         AND r.ended_at IS NOT NULL
-        AND DATE(r.started_at) = $2
+        AND TO_CHAR((r.started_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta')::date, 'YYYY-MM-DD') = $2
       ORDER BY r.started_at DESC
     `,
       [user_id, date]
@@ -113,7 +113,7 @@ exports.getAvailableDateHistory = async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT DISTINCT TO_CHAR(DATE(started_at), 'YYYY-MM-DD') AS ride_date
+      SELECT DISTINCT TO_CHAR((started_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta')::date, 'YYYY-MM-DD') AS ride_date
       FROM rides
       WHERE user_id = $1 AND ended_at IS NOT NULL
       ORDER BY ride_date DESC
@@ -121,7 +121,9 @@ exports.getAvailableDateHistory = async (req, res) => {
       [user_id]
     );
 
-    const available_dates = result.rows.map((row) => row.ride_date);
+    const available_dates = [
+      ...new Set(result.rows.map((row) => row.ride_date)),
+    ];
     res.json({ available_dates });
   } catch (err) {
     console.error("Gagal ambil available dates:", err.message);
