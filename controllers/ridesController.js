@@ -84,7 +84,7 @@ exports.endRide = async (req, res) => {
 
     // 5. Ambil heart rate tertinggi
     const hrResult = await pool.query(
-    `SELECT MAX(bpm) AS max_bpm FROM heartrate WHERE ride_id = $1`,
+    `SELECT MAX(bpm) AS max_bpm FROM heartrates WHERE ride_id = $1`,
     [ride_id] 
     );
     const maxHR = Math.round(hrResult.rows[0]?.max_bpm || 0);
