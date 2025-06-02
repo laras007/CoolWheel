@@ -103,9 +103,9 @@ exports.endRide = async (req, res) => {
 
     // 7. Simpan ke history_rides
     await pool.query(
-      `INSERT INTO ride_history (user_id, ride_id, duration, distance, pace, calories, max_heartrate, started_at, ended_at)
+      `INSERT INTO ride_history (ride_id, duration, distance, pace, calories, max_heartrate, user_id, started_at, ended_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [user_id, ride_id, roundedDistance, durationHr, pace, roundedCalories, maxHR, startTime, endTime]
+      [ride_id, durationHr, , roundedDistance, pace, roundedCalories, maxHR, user_id, startTime, endTime]
     );
 
     // 8. Update ride jadi selesai
