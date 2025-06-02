@@ -65,7 +65,7 @@ exports.getRealtimeStats = async (req, res) => {
       durationHours = (endTime - startTime) / (1000 * 60 * 60);
     }
 
-    const pace = durationHours > 0 ? distanceKm / durationHours : 0;
+    const pace = durationHours > 0 ? (durationHours / distanceKm) * 60 : 0;
 
     // 3. Ambil berat user
     const userResult = await pool.query(
