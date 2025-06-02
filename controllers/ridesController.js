@@ -97,12 +97,15 @@ exports.endRide = async (req, res) => {
     if (maxHR >= 160) MET += 0.5;
 
     const calories = MET * weight * durationHr;
+    const roundedCalories = Math.round(calories);
+    const roundedDistance = parseFloat(distanceKm.toFixed(2));
+
 
     // 7. Simpan ke history_rides
     await pool.query(
       `INSERT INTO ride_history (user_id, ride_id, duration, distance, pace, calories, max_heartrate, started_at, ended_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [user_id, ride_id, distanceKm, durationHr, pace, calories, maxHR, startTime, endTime]
+      [user_id, ride_id, roundedDistance, durationHr, pace, roundedCalories, maxHR, startTime, endTime]
     );
 
     // 8. Update ride jadi selesai
