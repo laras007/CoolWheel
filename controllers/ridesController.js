@@ -18,6 +18,7 @@ exports.startRide = async (req, res) => {
   }
 };
 
+
 exports.endRide = async (req, res) => {
   const user_id = req.user.user_id;
 
@@ -74,7 +75,10 @@ exports.endRide = async (req, res) => {
       }
     }
 
-    const durationHr = (endTime - startTime) / (1000 * 60 * 60);
+    // Konversi durasi
+    const durationSec = Math.round((endTime - startTime) / 1000); // ⏱️ detik
+    const durationHr = durationSec / 3600;
+
     const distanceKm = totalDistance / 1000;
     const pace = durationHr > 0 ? distanceKm / durationHr : 0;
 
@@ -84,11 +88,10 @@ exports.endRide = async (req, res) => {
 
     // 5. Ambil heart rate tertinggi
     const hrResult = await pool.query(
-    `SELECT MAX(bpm) AS max_bpm FROM heartrates WHERE ride_id = $1`,
-    [ride_id] 
+      `SELECT MAX(bpm) AS max_bpm FROM heartrates WHERE ride_id = $1`,
+      [ride_id]
     );
     const maxHR = Math.round(hrResult.rows[0]?.max_bpm || 0);
-
 
     // 6. Hitung kalori
     let MET = 4.0;
@@ -97,26 +100,58 @@ exports.endRide = async (req, res) => {
     if (maxHR >= 160) MET += 0.5;
 
     const calories = MET * weight * durationHr;
-    const roundedCalories = Math.round(calories);
+    const roundedCalories = parseFloat(calories.toFixed(2));
     const roundedDistance = parseFloat(distanceKm.toFixed(2));
-
+    const roundedPace = parseFloat(pace.toFixed(2));
 
     // 7. Simpan ke history_rides
     await pool.query(
-      `INSERT INTO ride_history (ride_id, duration, distance, pace, calories, max_heartrate, user_id, started_at, ended_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [ride_id, durationHr, roundedDistance, pace, roundedCalories, maxHR, user_id, startTime, endTime]
+      `INSERT INTO ride_history (
+        ride_id, duration, distance, pace, calories, max_heartrate,
+        user_id, started_at, ended_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        ride_id,
+        durationSec,             // ⏱️ integer (detik)
+        roundedDistance,         // km
+        roundedPace,             // km/h
+        roundedCalories,         // kcal
+        maxHR,
+        user_id,
+        startTime,
+        endTime
+      ]
     );
 
     // 8. Update ride jadi selesai
     await pool.query(`UPDATE rides SET ended_at = $1 WHERE id = $2`, [endTime, ride_id]);
 
+    // 9. Format durasi jadi HH:MM:SS
+    const formatDuration = (seconds) => {
+      const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+      const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    };
 
-    res.status(200).json({ message: 'Ride berhasil diakhiri dan disimpan ke history.' });
+    const durationFormatted = formatDuration(durationSec);
+
+    res.status(200).json({
+      message: 'Ride berhasil diakhiri dan disimpan ke history.',
+      ride_id,
+      duration: durationSec,
+      duration_formatted: durationFormatted,
+      distance: roundedDistance,
+      pace: roundedPace,
+      calories: roundedCalories,
+      max_heartrate: maxHR
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+
 
 
 exports.getLiveDuration = async (req, res) => {
