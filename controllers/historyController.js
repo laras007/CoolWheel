@@ -15,23 +15,16 @@ exports.getAllHistory = async (req, res) => {
     const result = await pool.query(
       `
       SELECT 
-        r.id AS ride_id,
-        r.started_at,
-        r.ended_at,
-        rs.heartrate AS highest_heartrate,
-        rs.calories AS total_calories,
-        rs.distance AS total_distance
-      FROM rides r
-      LEFT JOIN LATERAL (
-        SELECT 
-          MAX(last_heartrate) AS heartrate, 
-          SUM(calories) AS calories, 
-          SUM(distance) AS distance
-        FROM realtime_stats
-        WHERE ride_id = r.id
-      ) rs ON true
-      WHERE r.user_id = $1 AND r.ended_at IS NOT NULL
-      ORDER BY r.started_at DESC
+        ride_id,
+        started_at,
+        ended_at,
+        max_heartrate AS highest_heartrate,
+        calories AS total_calories,
+        distance AS total_distance,
+        duration
+      FROM ride_history
+      WHERE user_id = $1
+      ORDER BY started_at DESC
     `,
       [user_id]
     );
@@ -43,7 +36,7 @@ exports.getAllHistory = async (req, res) => {
       highest_heartrate: parseInt(ride.highest_heartrate || 0),
       total_calories: parseFloat(ride.total_calories || 0).toFixed(2),
       total_distance: parseFloat(ride.total_distance || 0).toFixed(2),
-      duration_minutes: calculateDuration(ride.started_at, ride.ended_at),
+      duration_minutes: ride.duration ? Math.round(ride.duration / 60) : 0,
     }));
 
     res.json({ history: rides });
@@ -62,25 +55,17 @@ exports.getHistoryByDate = async (req, res) => {
     const result = await pool.query(
       `
       SELECT 
-        r.id AS ride_id,
-        r.started_at,
-        r.ended_at,
-        rs.heartrate AS highest_heartrate,
-        rs.calories AS total_calories,
-        rs.distance AS total_distance
-      FROM rides r
-      LEFT JOIN LATERAL (
-        SELECT 
-          MAX(last_heartrate) AS heartrate, 
-          SUM(calories) AS calories, 
-          SUM(distance) AS distance
-        FROM realtime_stats
-        WHERE ride_id = r.id
-      ) rs ON true
-      WHERE r.user_id = $1 
-        AND r.ended_at IS NOT NULL
-        AND TO_CHAR((r.started_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta')::date, 'YYYY-MM-DD') = $2
-      ORDER BY r.started_at DESC
+        ride_id,
+        started_at,
+        ended_at,
+        max_heartrate AS highest_heartrate,
+        calories AS total_calories,
+        distance AS total_distance,
+        duration
+      FROM ride_history
+      WHERE user_id = $1 
+        AND TO_CHAR((started_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta')::date, 'YYYY-MM-DD') = $2
+      ORDER BY started_at DESC
     `,
       [user_id, date]
     );
@@ -96,7 +81,7 @@ exports.getHistoryByDate = async (req, res) => {
       highest_heartrate: parseInt(ride.highest_heartrate || 0),
       total_calories: parseFloat(ride.total_calories || 0).toFixed(2),
       total_distance: parseFloat(ride.total_distance || 0).toFixed(2),
-      duration_minutes: calculateDuration(ride.started_at, ride.ended_at),
+      duration_minutes: ride.duration ? Math.round(ride.duration / 60) : 0,
     }));
 
     res.json({ history_by_date: rides });
