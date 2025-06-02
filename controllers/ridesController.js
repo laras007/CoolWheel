@@ -152,8 +152,6 @@ exports.endRide = async (req, res) => {
 };
 
 
-
-
 exports.getLiveDuration = async (req, res) => {
   const user_id = req.user.user_id;
 
