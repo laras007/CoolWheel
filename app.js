@@ -11,7 +11,6 @@ const gpsRoutes = require('./routes/gps');
 const ridesRoutes = require('./routes/rides');
 const heartrateRoutes = require ('./routes/heartrate');
 const caloriesRoutes = require('./routes/calories');
-const coolerRoutes = require('./routes/coolertemp');
 const realtimeRoutes = require('./routes/realtime');
 const historyRoutes = require('./routes/history');
 
@@ -21,7 +20,6 @@ app.use('/api/gps', gpsRoutes);
 app.use('/api/rides', ridesRoutes);
 app.use ('/api/heartrate', heartrateRoutes);
 app.use('/api/calories', caloriesRoutes);
-app.use ('/api/cooler', coolerRoutes);
 app.use('/api/history', historyRoutes);
 
 app.listen(port, () => {
