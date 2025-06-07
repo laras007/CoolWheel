@@ -30,18 +30,19 @@ exports.saveGpsData = async (req, res) => {
 };
 
 
-exports.getGpsDataByUser = async (req, res) => {
-  const user_id = req.user.user_id;
+exports.getGpsDataByRideId = async (req, res) => {
+  const ride_id = req.query.ride_id;
 
   try {
     const result = await pool.query(
-      'SELECT * FROM gps_points WHERE ride_id = $1 ORDER BY recorded_at ASC',
-      [user_id]
+      'SELECT latitude, longitude FROM gps_points WHERE ride_id = $1 ORDER BY recorded_at ASC',
+      [ride_id]
     );
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
