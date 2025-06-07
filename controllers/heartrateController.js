@@ -100,3 +100,22 @@ exports.getLastHeartrate = async (req, res) => {
   }
 };
 
+exports.getHeartrateByRideId = async (req, res) => {
+  const ride_id = req.query.ride_id;
+
+  try {
+    const result = await pool.query(
+      `SELECT bpm, recorded_at FROM heartrates WHERE ride_id = $1 ORDER BY recorded_at ASC`,
+      [ride_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Tidak ada data heartrate untuk ride ini' });
+    }
+
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
