@@ -29,7 +29,25 @@ exports.saveGpsData = async (req, res) => {
   }
 };
 
+exports.getlastGpsData = async (req, res) => {
+  const user_id = req.user.user_id;
 
+  try {
+    const result = await pool.query(
+      `SELECT latitude, longitude FROM gps_points 
+       WHERE user_id = $1 ORDER BY recorded_at DESC LIMIT 1`,
+      [user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No GPS data found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 exports.getGpsDataByRideId = async (req, res) => {
   const ride_id = req.query.ride_id;
