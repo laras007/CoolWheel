@@ -178,18 +178,96 @@ exports.endRide = async (req, res) => {
       const s = (seconds % 60).toString().padStart(2, "0");
       return `${h}:${m}:${s}`;
     };
-
     const durationFormatted = formatDuration(durationSec);
+
+    // 10. Buat summary yang lebih lengkap
+    const userSummary = await pool.query(
+      `SELECT username, age FROM users WHERE id = $1`,
+      [user_id]
+    );
+    const username = userSummary.rows[0]?.username || "Unknown";
+    const age = userSummary.rows[0]?.age || 25;
+
+    // Hitung statistik HR tambahan jika ada data
+    const hrStatsResult = await pool.query(
+      `SELECT 
+        COUNT(*) as total_readings,
+        AVG(bpm) as avg_heartrate,
+        MIN(bpm) as min_heartrate
+      FROM heartrates 
+      WHERE ride_id = $1`,
+      [ride_id]
+    );
+
+    const hrStats = hrStatsResult.rows[0];
+    const avgHR = Math.round(hrStats?.avg_heartrate || 0);
+    const minHR = Math.round(hrStats?.min_heartrate || 0);
+
+    // Tentukan level intensitas
+    const estimatedMaxHR = 220 - age;
+    let intensityLevel = "Rendah";
+    if (maxHR > estimatedMaxHR * 0.85) {
+      intensityLevel = "Sangat Tinggi";
+    } else if (maxHR > estimatedMaxHR * 0.7) {
+      intensityLevel = "Tinggi";
+    } else if (maxHR > estimatedMaxHR * 0.5) {
+      intensityLevel = "Sedang";
+    }
+
+    // Buat achievements
+    const achievements = [];
+    if (roundedDistance >= 10) {
+      achievements.push(
+        "🏆 Long Distance Rider - Menyelesaikan perjalanan lebih dari 10km"
+      );
+    }
+    if (durationSec >= 3600) {
+      achievements.push(
+        "⏰ Endurance Champion - Bersepeda selama lebih dari 1 jam"
+      );
+    }
+    if (roundedCalories >= 500) {
+      achievements.push("🔥 Calorie Burner - Membakar lebih dari 500 kalori");
+    }
+    if (roundedPace >= 20) {
+      achievements.push(
+        "⚡ Speed Demon - Kecepatan rata-rata di atas 20 km/jam"
+      );
+    }
 
     res.status(200).json({
       message: "Ride berhasil diakhiri dan disimpan ke history.",
-      ride_id,
-      duration: durationSec,
-      duration_formatted: durationFormatted,
-      distance: roundedDistance,
-      pace: roundedPace,
-      calories: roundedCalories,
-      max_heartrate: maxHR,
+      summary: {
+        ride_info: {
+          ride_id,
+          rider_name: username,
+          date: new Date().toLocaleDateString("id-ID", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          duration_formatted: durationFormatted,
+        },
+        performance: {
+          distance: roundedDistance,
+          duration_seconds: durationSec,
+          pace: roundedPace,
+          calories: roundedCalories,
+          calories_per_km:
+            roundedDistance > 0
+              ? parseFloat((roundedCalories / roundedDistance).toFixed(2))
+              : 0,
+        },
+        heartrate_stats: {
+          max_heartrate: maxHR,
+          avg_heartrate: avgHR,
+          min_heartrate: minHR,
+          intensity_level: intensityLevel,
+          total_readings: parseInt(hrStats?.total_readings || 0),
+        },
+        achievements: achievements,
+      },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
