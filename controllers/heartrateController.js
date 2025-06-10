@@ -31,14 +31,6 @@ exports.saveHeartrate = async (req, res) => {
       [ride_id, bpm]
     );
 
-    // Update last_heartrate
-    await pool.query(
-      `UPDATE realtime_stats
-       SET last_heartrate = $1, updated_at = NOW()
-       WHERE ride_id = $2`,
-      [bpm, ride_id]
-    );
-
     // Ambil data user: username, sos_number, dan age
     const userResult = await pool.query(
       `SELECT username, sos_number, age FROM users WHERE id = $1`,
