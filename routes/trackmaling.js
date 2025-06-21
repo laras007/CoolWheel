@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const trackingController = require('../controllers/trackimalingController');
+const trackingController = require('../controllers/trackmalingController');
 
 router.post('/', trackingController.trackLocation); // POST /api/tracking
 
