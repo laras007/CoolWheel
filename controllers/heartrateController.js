@@ -36,7 +36,7 @@ exports.saveHeartrate = async (req, res) => {
       `SELECT username, sos_number, age FROM users WHERE id = $1`,
       [user_id]
     );
-    const { username, sos_number, age } = userResult.rows[0];
+    const {username, sos_number, age } = userResult.rows[0];
 
     const maxBPM = 220 - age;
 

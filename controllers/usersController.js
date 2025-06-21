@@ -132,9 +132,9 @@ exports.updateUser = async (req, res) => {
 
     const result = await pool.query(
       `UPDATE users 
-       SET username = $1, height = $2, weight = $3, sos_number = $4, nama_sos = $5, age = $6, phone_number = $7 
+       SET username = $1, height = $2, weight = $3, sos_number = $4, nama_sos = $5, age = $6, phone_number = $7, updated_at = NOW() 
        WHERE id = $8 
-       RETURNING id, username, email, height, weight, sos_number, nama_sos, age, phone_number`,
+       RETURNING id, username, email, height, weight, sos_number, nama_sos, age, phone_number, updated_at`,
       [updated.username, updated.height, updated.weight, updated.sos_number, updated.nama_sos, updated.age, updated.phone_number, user_id]
     );
 
