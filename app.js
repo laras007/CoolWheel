@@ -13,7 +13,7 @@ const heartrateRoutes = require ('./routes/heartrate');
 const realtimeRoutes = require('./routes/realtime');
 const historyRoutes = require('./routes/history');
 const summaryRoutes = require("./routes/summary");
-const trackingmalingRoutes = require('./routes/trackmaling');
+
 const parkingRoutes = require('./routes/parking');
 const buzzerRoutes = require("./routes/buzzer");
 
@@ -24,7 +24,6 @@ app.use("/api/rides", ridesRoutes);
 app.use("/api/heartrate", heartrateRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/summary", summaryRoutes);
-app.use('/api/tracking', trackingmalingRoutes);
 app.use('/api/buzzer', buzzerRoutes);
 app.use('/api/parking', parkingRoutes);
 
