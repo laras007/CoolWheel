@@ -106,19 +106,8 @@ exports.trackLocation = async (req, res) => {
       current.latitude, current.longitude
     );
 
-    if (distance > 100) {
-      console.log(`🚨 Sepeda user ${user_id} berpindah ${distance.toFixed(2)} meter dari lokasi parkir`);
-
-      // TODO: kirim notifikasi (email, WA, FCM, dsb.)
-
-      return res.status(200).json({
-        alert: true,
-        distance,
-        message: "🚨 Sepeda Anda berpindah dari lokasi parkir!"
-      });
-    }
-
-    res.status(200).json({ alert: false, distance });
+    // Hilangkan pengecekan distance di backend, biarkan client yang handle notifikasi
+    res.status(200).json({ distance });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Gagal mengecek lokasi sepeda" });
