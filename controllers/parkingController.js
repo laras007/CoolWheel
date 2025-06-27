@@ -67,7 +67,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 exports.trackLocation = async (req, res) => {
-  const { user_id } = req.body;
+  const user_id = req.user.user_id;
 
   if (!user_id) return res.status(400).json({ message: "user_id diperlukan" });
 
