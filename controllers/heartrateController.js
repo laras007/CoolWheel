@@ -48,12 +48,12 @@ exports.saveHeartrate = async (req, res) => {
     const maxBPM = 220 - age;
 
     // Kirim WA jika bpm melebihi batas maksimal berdasarkan usia
-    if (bpm > maxBPM && sos_number) {
+    if (bpm > maxBPM ) {
       const message = `⚠️ Detak jantung pada ${username} tinggi (${bpm} bpm).;`;
       try {
         await client.messages.create({
           from: 'whatsapp:+14155238886', // dari Twilio Sandbox
-          to: `whatsapp:${sos_number}`,
+          to: `whatsapp:+6285716463408`,
           body: message,
         });
       } catch (waErr) {
