@@ -24,9 +24,9 @@ exports.toggleParking = async (req, res) => {
       return res.status(200).json({ message: "Parkir telah diakhiri" });
     } else {
       // ✅ Jika belum parkir → mulai parkir
-      // Ambil titik GPS terakhir dari tabel gps_point
+      // Ambil titik GPS terakhir dari tabel gps_points
       const gps = await pool.query(
-        `SELECT latitude, longitude FROM gps_point 
+        `SELECT latitude, longitude FROM gps_points 
          WHERE user_id = $1 
          ORDER BY timestamp DESC 
          LIMIT 1`,
@@ -40,8 +40,8 @@ exports.toggleParking = async (req, res) => {
       const { latitude, longitude } = gps.rows[0];
 
       const result = await pool.query(
-        `INSERT INTO bike_parking_positions (user_id, latitude, longitude)
-         VALUES ($1, $2, $3) RETURNING *`,
+        `INSERT INTO bike_parking_positions (user_id, latitude, longitude, parked_at, is_active)
+         VALUES ($1, $2, $3, NOW(), true) RETURNING *`,
         [user_id, latitude, longitude]
       );
 
@@ -49,7 +49,7 @@ exports.toggleParking = async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Gagal toggle status parkir" });
+    res.status(500).json({ message: "Gagal toggle status parkir", error: err.message });
   }
 };
 
@@ -86,9 +86,9 @@ exports.trackLocation = async (req, res) => {
 
     const park = parkResult.rows[0];
 
-    // 2. Ambil posisi GPS terkini dari tabel gps_point
+    // 2. Ambil posisi GPS terkini dari tabel gps_points
     const gpsResult = await pool.query(
-      `SELECT latitude, longitude FROM gps_point 
+      `SELECT latitude, longitude FROM gps_points 
        WHERE user_id = $1 
        ORDER BY timestamp DESC LIMIT 1`,
       [user_id]
