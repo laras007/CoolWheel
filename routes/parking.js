@@ -4,6 +4,6 @@ const parkingController = require('../controllers/parkingController');
 const authenticateToken = require('../middleware/authMiddleware');
 
 // POST /api/parking/toggle
-router.post('/toggle', parkingController.toggleParking);
-router.post('/theft', parkingController.trackLocation); // POST /api/tracking
+router.post('/toggle', authenticateToken, parkingController.toggleParking);
+router.post('/theft', authenticateToken, parkingController.trackLocation); // POST /api/tracking
 module.exports = router;
