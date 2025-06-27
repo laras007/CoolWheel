@@ -28,7 +28,7 @@ exports.toggleParking = async (req, res) => {
       const gps = await pool.query(
         `SELECT latitude, longitude FROM gps_points 
          WHERE user_id = $1 
-         ORDER BY timestamp DESC 
+         ORDER BY recorded_at DESC 
          LIMIT 1`,
         [user_id]
       );
@@ -90,7 +90,7 @@ exports.trackLocation = async (req, res) => {
     const gpsResult = await pool.query(
       `SELECT latitude, longitude FROM gps_points 
        WHERE user_id = $1 
-       ORDER BY timestamp DESC LIMIT 1`,
+       ORDER BY recorded_at DESC LIMIT 1`,
       [user_id]
     );
 
