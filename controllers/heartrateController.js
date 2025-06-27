@@ -36,7 +36,7 @@ exports.saveHeartrate = async (req, res) => {
       `SELECT username, sos_number, age FROM users WHERE id = $1`,
       [user_id]
     );
-    console.log('userResult:', userResult.rows[0]); // debug log
+    console.log('userResult.rows:', userResult.rows); // debug log
     if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'User tidak ditemukan' });
     }
@@ -50,12 +50,15 @@ exports.saveHeartrate = async (req, res) => {
     // Kirim WA jika bpm melebihi batas maksimal berdasarkan usia
     if (bpm > maxBPM && sos_number) {
       const message = `⚠️ Detak jantung pada ${username} tinggi (${bpm} bpm).;`;
-
-      await client.messages.create({
-        from: 'whatsapp:+14155238886', // dari Twilio Sandbox
-        to: `whatsapp:${sos_number}`,
-        body: message,
-      });
+      try {
+        await client.messages.create({
+          from: 'whatsapp:+14155238886', // dari Twilio Sandbox
+          to: `whatsapp:${sos_number}`,
+          body: message,
+        });
+      } catch (waErr) {
+        console.error('Twilio error:', waErr);
+      }
     }
 
     res.status(201).json(result.rows[0]);
