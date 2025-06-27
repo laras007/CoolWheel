@@ -1,7 +1,7 @@
 const pool = require('../db');
 
 exports.toggleParking = async (req, res) => {
-  const { user_id } = req.body;
+  const user_id = req.user.user_id;
 
   if (!user_id) {
     return res.status(400).json({ message: "user_id diperlukan" });
