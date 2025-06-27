@@ -36,7 +36,14 @@ exports.saveHeartrate = async (req, res) => {
       `SELECT username, sos_number, age FROM users WHERE id = $1`,
       [user_id]
     );
+    console.log('userResult:', userResult.rows[0]); // debug log
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User tidak ditemukan' });
+    }
     const {username, sos_number, age } = userResult.rows[0];
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
 
     const maxBPM = 220 - age;
 
