@@ -1,6 +1,7 @@
 const pool = require('../db');
 
 exports.toggleParking = async (req, res) => {
+  // Ambil user_id dari req.user.user_id (seperti start ride)
   const user_id = req.user.user_id;
 
   if (!user_id) {
@@ -20,7 +21,6 @@ exports.toggleParking = async (req, res) => {
         `UPDATE bike_parking_positions SET is_active = false WHERE id = $1`,
         [existing.rows[0].id]
       );
-
       return res.status(200).json({ message: "Parkir telah diakhiri" });
     } else {
       // ✅ Jika belum parkir → mulai parkir
@@ -67,6 +67,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 exports.trackLocation = async (req, res) => {
+  // Ambil user_id dari req.user.user_id (seperti start ride)
   const user_id = req.user.user_id;
 
   if (!user_id) return res.status(400).json({ message: "user_id diperlukan" });
@@ -106,7 +107,6 @@ exports.trackLocation = async (req, res) => {
       current.latitude, current.longitude
     );
 
-    // Hilangkan pengecekan distance di backend, biarkan client yang handle notifikasi
     res.status(200).json({ distance });
   } catch (err) {
     console.error(err);
